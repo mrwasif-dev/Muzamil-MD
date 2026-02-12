@@ -32,7 +32,10 @@ function wasi_isDbConnected() {
 }
 
 async function wasi_registerSession(sessionId) {
-    if (!isConnected || !SessionModel) return false;
+    if (!isConnected || !SessionModel) {
+        console.log('⚠️ Cannot register session: Database not connected');
+        return false;
+    }
     try {
         await SessionModel.findOneAndUpdate(
             { sessionId },
@@ -42,7 +45,7 @@ async function wasi_registerSession(sessionId) {
         console.log(`✅ Session registered in DB: ${sessionId}`);
         return true;
     } catch (e) {
-        console.error('❌ Error registering session:', e);
+        console.error('❌ Error registering session:', e.message);
         return false;
     }
 }
@@ -54,7 +57,7 @@ async function wasi_unregisterSession(sessionId) {
         console.log(`✅ Session unregistered from DB: ${sessionId}`);
         return true;
     } catch (e) {
-        console.error('❌ Error unregistering session:', e);
+        console.error('❌ Error unregistering session:', e.message);
         return false;
     }
 }
@@ -65,10 +68,12 @@ async function wasi_getAllSessions() {
         const sessions = await SessionModel.find({});
         return sessions.map(s => s.sessionId);
     } catch (e) {
+        console.error('❌ Error getting sessions:', e.message);
         return [];
     }
 }
 
+// ✅ FIXED: All functions exported properly
 module.exports = {
     wasi_connectDatabase,
     wasi_isDbConnected,
