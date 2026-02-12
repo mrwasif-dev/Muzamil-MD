@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// SCHEMA - ONLY SESSION ID
 const wasi_sessionSchema = new mongoose.Schema({
     sessionId: { type: String, required: true, unique: true },
     createdAt: { type: Date, default: Date.now }
@@ -9,14 +8,10 @@ const wasi_sessionSchema = new mongoose.Schema({
 let isConnected = false;
 let SessionModel = null;
 
-// ---------------------------------------------------------------------------
-// DB CONNECTION
-// ---------------------------------------------------------------------------
 async function wasi_connectDatabase(dbUrl) {
     const uri = dbUrl || process.env.MONGODB_URI;
-
     if (!uri) {
-        console.error('❌ No MONGODB_URI found.');
+        console.log('⚠️ No MongoDB URL provided');
         return false;
     }
 
@@ -24,17 +19,18 @@ async function wasi_connectDatabase(dbUrl) {
         await mongoose.connect(uri);
         isConnected = true;
         SessionModel = mongoose.models.wasi_sessions || mongoose.model('wasi_sessions', wasi_sessionSchema);
-        console.log('✅ Connected to MongoDB successfully!');
+        console.log('✅ MongoDB Connected Successfully');
         return true;
     } catch (err) {
-        console.error('❌ Failed to connect to MongoDB:', err.message);
+        console.error('❌ MongoDB Connection Error:', err.message);
         return false;
     }
 }
 
-// ---------------------------------------------------------------------------
-// SESSION MANAGEMENT - ONLY THESE 3 FUNCTIONS
-// ---------------------------------------------------------------------------
+function wasi_isDbConnected() {
+    return isConnected;
+}
+
 async function wasi_registerSession(sessionId) {
     if (!isConnected || !SessionModel) return false;
     try {
@@ -43,10 +39,10 @@ async function wasi_registerSession(sessionId) {
             { sessionId },
             { upsert: true, new: true }
         );
-        console.log(`✅ Session registered: ${sessionId}`);
+        console.log(`✅ Session registered in DB: ${sessionId}`);
         return true;
     } catch (e) {
-        console.error('DB Error registerSession:', e);
+        console.error('❌ Error registering session:', e);
         return false;
     }
 }
@@ -55,10 +51,10 @@ async function wasi_unregisterSession(sessionId) {
     if (!isConnected || !SessionModel) return false;
     try {
         await SessionModel.findOneAndDelete({ sessionId });
-        console.log(`✅ Session unregistered: ${sessionId}`);
+        console.log(`✅ Session unregistered from DB: ${sessionId}`);
         return true;
     } catch (e) {
-        console.error('DB Error unregisterSession:', e);
+        console.error('❌ Error unregistering session:', e);
         return false;
     }
 }
@@ -69,13 +65,8 @@ async function wasi_getAllSessions() {
         const sessions = await SessionModel.find({});
         return sessions.map(s => s.sessionId);
     } catch (e) {
-        console.error('DB Error getAllSessions:', e);
         return [];
     }
-}
-
-function wasi_isDbConnected() {
-    return isConnected;
 }
 
 module.exports = {
