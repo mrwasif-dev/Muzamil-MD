@@ -124,6 +124,13 @@
             text-transform: uppercase;
         }
         
+        /* Status Container */
+        .status-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
         /* Status Badge */
         .status-badge {
             background: rgba(37, 211, 102, 0.1);
@@ -149,6 +156,17 @@
             background: #25d366;
             box-shadow: 0 0 15px #25d366;
             animation: none;
+        }
+        
+        .status-dot.disconnected {
+            background: #ff4d4d;
+            box-shadow: 0 0 10px #ff4d4d;
+        }
+        
+        .status-dot.connecting {
+            background: #ffaa33;
+            box-shadow: 0 0 10px #ffaa33;
+            animation: blink 1.5s infinite;
         }
         
         @keyframes blink {
@@ -463,9 +481,17 @@
                         <span>Multi-Device WhatsApp Bot</span>
                     </div>
                 </div>
-                <div class="status-badge" id="statusBadge">
-                    <div class="status-dot" id="statusDot"></div>
-                    <span id="statusText">Checking Status...</span>
+                <div class="status-container">
+                    <!-- WhatsApp Status -->
+                    <div class="status-badge" id="whatsappStatusBadge">
+                        <div class="status-dot" id="whatsappStatusDot"></div>
+                        <span id="whatsappStatusText">Checking WhatsApp...</span>
+                    </div>
+                    <!-- Database Status -->
+                    <div class="status-badge" id="dbStatusBadge">
+                        <div class="status-dot" id="dbStatusDot"></div>
+                        <span id="dbStatusText">Checking Database...</span>
+                    </div>
                 </div>
             </div>
             
@@ -491,6 +517,13 @@
                     </div>
                     <div class="info-label">Session ID</div>
                     <div class="info-value" id="sessionId">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="info-label">Database</div>
+                    <div class="info-value" id="dbStatus">-</div>
                 </div>
                 <div class="info-item">
                     <div class="info-icon">
@@ -558,24 +591,44 @@
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 
-                // Update status badge
-                const statusDot = document.getElementById('statusDot');
-                const statusText = document.getElementById('statusText');
-                const statusBadge = document.getElementById('statusBadge');
+                // ---------- WhatsApp Status ----------
+                const whatsappDot = document.getElementById('whatsappStatusDot');
+                const whatsappText = document.getElementById('whatsappStatusText');
+                const whatsappBadge = document.getElementById('whatsappStatusBadge');
                 
                 if (data.connected) {
-                    statusDot.className = 'status-dot connected';
-                    statusText.textContent = 'Connected to WhatsApp';
-                    statusBadge.style.background = 'rgba(37, 211, 102, 0.15)';
-                    statusBadge.style.borderColor = 'rgba(37, 211, 102, 0.4)';
+                    whatsappDot.className = 'status-dot connected';
+                    whatsappText.textContent = 'WhatsApp Connected';
+                    whatsappBadge.style.background = 'rgba(37, 211, 102, 0.15)';
+                    whatsappBadge.style.borderColor = 'rgba(37, 211, 102, 0.4)';
                 } else {
-                    statusDot.className = 'status-dot';
-                    statusText.textContent = 'Not Connected';
-                    statusBadge.style.background = 'rgba(255, 170, 51, 0.1)';
-                    statusBadge.style.borderColor = 'rgba(255, 170, 51, 0.3)';
+                    whatsappDot.className = 'status-dot disconnected';
+                    whatsappText.textContent = 'WhatsApp Disconnected';
+                    whatsappBadge.style.background = 'rgba(255, 77, 77, 0.1)';
+                    whatsappBadge.style.borderColor = 'rgba(255, 77, 77, 0.3)';
                 }
                 
-                // Update QR code
+                // ---------- Database Status ----------
+                const dbDot = document.getElementById('dbStatusDot');
+                const dbText = document.getElementById('dbStatusText');
+                const dbBadge = document.getElementById('dbStatusBadge');
+                const dbStatusValue = document.getElementById('dbStatus');
+                
+                if (data.dbConnected) {
+                    dbDot.className = 'status-dot connected';
+                    dbText.textContent = 'Database Connected';
+                    dbBadge.style.background = 'rgba(37, 211, 102, 0.15)';
+                    dbBadge.style.borderColor = 'rgba(37, 211, 102, 0.4)';
+                    dbStatusValue.innerHTML = '<span style="color: #25d366;">✅ Connected</span>';
+                } else {
+                    dbDot.className = 'status-dot disconnected';
+                    dbText.textContent = 'Database Disconnected';
+                    dbBadge.style.background = 'rgba(255, 77, 77, 0.1)';
+                    dbBadge.style.borderColor = 'rgba(255, 77, 77, 0.3)';
+                    dbStatusValue.innerHTML = '<span style="color: #ff4d4d;">❌ Not Connected</span>';
+                }
+                
+                // ---------- QR Code ----------
                 const qrContainer = document.getElementById('qrContainer');
                 if (data.qr) {
                     qrContainer.innerHTML = `
@@ -603,17 +656,21 @@
                     `;
                 }
                 
-                // Update session info
+                // ---------- Session Info ----------
                 document.getElementById('sessionId').innerHTML = `<span style="color: #25d366;">${data.sessionId || 'wasi_session'}</span>`;
                 document.getElementById('activeSessions').innerHTML = `<span style="color: #25d366;">${data.activeSessions?.length || 0}</span>`;
                 
-                // Update last update time
+                // ---------- Last Update ----------
                 const now = new Date();
                 document.getElementById('lastUpdate').innerHTML = `<span style="color: #25d366;">${now.toLocaleTimeString()}</span>`;
                 
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('statusText').textContent = 'Error Connecting';
+                
+                // Error State
+                document.getElementById('whatsappStatusText').textContent = 'Error';
+                document.getElementById('dbStatusText').textContent = 'Error';
+                
                 document.getElementById('qrContainer').innerHTML = `
                     <div class="no-qr">
                         <i class="fas fa-exclamation-triangle" style="color: #ff4d4d;"></i>
