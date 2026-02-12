@@ -2,10 +2,10 @@ const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion,
 const path = require('path');
 const fs = require('fs');
 
-// ✅ FIX: Import crypto for Node.js 18+
+// 🔥 FIX: Import crypto for Node.js 18+ (Heroku Fix)
 const crypto = require('crypto');
 
-// ✅ FIX: Set global crypto
+// 🔥 FIX: Set global crypto (Heroku Fix)
 if (!globalThis.crypto) {
     globalThis.crypto = crypto;
 }
