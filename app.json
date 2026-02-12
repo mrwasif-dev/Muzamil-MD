@@ -1,0 +1,52 @@
+{
+  "name": "Muzamil-MD",
+  "description": "WhatsApp Auto Forward Bot with Multi-Device Support",
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "auto-forward",
+    "baileys",
+    "multi-device",
+    "whatsapp-bot"
+  ],
+  "repository": "https://github.com/mrwasif-dev/Muzamil-MD",
+  "logo": "https://i.ibb.co/d6bLQ7y/whatsapp-logo.png",
+  "env": {
+    "SESSION_ID": {
+      "description": "Unique session ID for your bot",
+      "required": true,
+      "value": ""
+    },
+    "MONGODB_URL": {
+      "description": "MongoDB connection URL for storing session data",
+      "required": false,
+      "value": ""
+    },
+    "SOURCE_JIDS": {
+      "description": "Comma-separated list of JIDs to forward messages FROM",
+      "required": true,
+      "value": ""
+    },
+    "TARGET_JIDS": {
+      "description": "Comma-separated list of JIDs to forward messages TO",
+      "required": true,
+      "value": ""
+    },
+    "OLD_TEXT_REGEX": {
+      "description": "Comma-separated regex patterns to replace in captions",
+      "required": false,
+      "value": ""
+    },
+    "NEW_TEXT": {
+      "description": "Text to replace OLD_TEXT_REGEX matches with",
+      "required": false,
+      "value": ""
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "stack": "heroku-22"
+}
