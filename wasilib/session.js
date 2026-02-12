@@ -21,11 +21,11 @@ async function wasi_connectSession(flag = false, sessionId) {
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
         const { version } = await fetchLatestBaileysVersion();
 
-        // ✅ FIX: Terminal QR OFF - صرف Web Dashboard پر QR
+        // 🔥 FIX: Terminal QR COMPLETELY OFF
         const wasi_sock = makeWASocket({
             version,
             auth: state,
-            printQRInTerminal: false,  // 🔥 TERMINAL QR BAND
+            printQRInTerminal: false,  // ✅ TERMINAL QR BAND
             browser: Browsers.macOS('Desktop'),
             syncFullHistory: false,
             generateHighQualityLinkPreview: false,
