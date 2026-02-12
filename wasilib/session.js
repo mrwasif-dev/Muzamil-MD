@@ -2,6 +2,14 @@ const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion,
 const path = require('path');
 const fs = require('fs');
 
+// ✅ FIX: Import crypto for Node.js 18+
+const crypto = require('crypto');
+
+// ✅ FIX: Set global crypto
+if (!globalThis.crypto) {
+    globalThis.crypto = crypto;
+}
+
 async function wasi_connectSession(flag = false, sessionId) {
     try {
         const sessionDir = path.join(__dirname, '..', 'sessions', sessionId);
