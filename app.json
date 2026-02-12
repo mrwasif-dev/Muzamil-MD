@@ -9,9 +9,7 @@
     "multi-device",
     "whatsapp-bot",
     "muzamil",
-    "whatsapp-md",
-    "auto-reply",
-    "forward-bot"
+    "whatsapp-md"
   ],
   "repository": "https://github.com/mrwasif-dev/Muzamil-MD",
   "logo": "https://i.ibb.co/d6bLQ7y/whatsapp-logo.png",
@@ -19,13 +17,13 @@
   "stack": "heroku-22",
   "env": {
     "SESSION_ID": {
-      "description": "🔐 Unique session ID for your bot (e.g., muzamil_bot_1)",
+      "description": "🔐 Unique session ID for your bot (required)",
       "required": true,
       "value": ""
     },
     "MONGODB_URL": {
-      "description": "🍃 MongoDB connection URL for storing sessions (optional - leave empty if not needed)",
-      "required": false,
+      "description": "🍃 MongoDB connection URL for storing sessions (required for database features)",
+      "required": true,
       "value": ""
     }
   },
@@ -33,13 +31,5 @@
     {
       "url": "heroku/nodejs"
     }
-  ],
-  "addons": [],
-  "environments": {
-    "test": {
-      "scripts": {
-        "test": "echo \"No tests specified\""
-      }
-    }
-  }
+  ]
 }
