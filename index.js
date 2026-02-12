@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-// 🔥🔥🔥 CRITICAL FIX: Heroku Node.js 18+ Crypto Fix 🔥🔥🔥
+// 🔥 CRITICAL FIX: Heroku Node.js 18+ Crypto Fix
 const crypto = require('crypto');
 if (!globalThis.crypto) {
     globalThis.crypto = crypto;
@@ -17,7 +17,13 @@ const fs = require('fs');
 const path = require('path');
 
 const { wasi_connectSession, wasi_clearSession } = require('./wasilib/session');
-const { wasi_connectDatabase, wasi_isDbConnected } = require('./wasilib/database');
+const { 
+    wasi_connectDatabase, 
+    wasi_isDbConnected,
+    wasi_registerSession,    // ✅ FIXED: Imported
+    wasi_unregisterSession,  // ✅ FIXED: Imported
+    wasi_getAllSessions      // ✅ FIXED: Imported
+} = require('./wasilib/database');
 const commands = require('./commands');
 
 const wasi_app = express();
@@ -305,7 +311,6 @@ async function startSession(sessionId) {
             sessionState.qr = qr;
             sessionState.isConnected = false;
             console.log(`📱 QR generated for session: ${sessionId}`);
-            console.log(`🌐 Scan QR at: ${process.env.APP_URL || 'your-app'}/`);
         }
 
         if (connection === 'close') {
@@ -475,7 +480,7 @@ function wasi_startServer() {
 }
 
 // -----------------------------------------------------------------------------
-// MAIN STARTUP
+// MAIN STARTUP - FIXED
 // -----------------------------------------------------------------------------
 async function main() {
     // Connect to MongoDB
@@ -495,9 +500,10 @@ async function main() {
         process.exit(1);
     }
     
-    // Register session in database
-    if (wasi_isDbConnected()) {
+    // ✅ FIXED: Register session in database (check if function exists)
+    if (typeof wasi_registerSession === 'function' && wasi_isDbConnected()) {
         await wasi_registerSession(sessionId);
+        console.log(`✅ Session registered in DB: ${sessionId}`);
     }
     
     // Start WhatsApp session
