@@ -10,13 +10,79 @@ const fs = require('fs');
 const path = require('path');
 
 const { wasi_connectSession, wasi_clearSession } = require('./wasilib/session');
-const { wasi_connectDatabase } = require('./wasilib/database');
+const { wasi_connectDatabase, wasi_isDbConnected } = require('./wasilib/database');
 const commands = require('./commands');
 
 const wasi_app = express();
 const wasi_port = process.env.PORT || 3000;
 
 const QRCode = require('qrcode');
+
+// -----------------------------------------------------------------------------
+// CONFIG FILE MANAGEMENT
+// -----------------------------------------------------------------------------
+const configPath = path.join(__dirname, 'botConfig.json');
+
+let botConfig = {
+    sourceJids: [],
+    targetJids: [],
+    oldTextRegex: [],
+    newText: ''
+};
+
+try {
+    if (fs.existsSync(configPath)) {
+        botConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        console.log('✅ Config loaded from botConfig.json');
+    } else {
+        fs.writeFileSync(configPath, JSON.stringify(botConfig, null, 2));
+        console.log('✅ Created new botConfig.json');
+    }
+} catch (e) {
+    console.error('Error loading config:', e);
+}
+
+function saveConfig() {
+    try {
+        fs.writeFileSync(configPath, JSON.stringify(botConfig, null, 2));
+        return true;
+    } catch (e) {
+        console.error('Error saving config:', e);
+        return false;
+    }
+}
+
+// -----------------------------------------------------------------------------
+// AUTO FORWARD CONFIGURATION
+// -----------------------------------------------------------------------------
+const SOURCE_JIDS = process.env.SOURCE_JIDS 
+    ? process.env.SOURCE_JIDS.split(',') 
+    : botConfig.sourceJids;
+
+const TARGET_JIDS = process.env.TARGET_JIDS 
+    ? process.env.TARGET_JIDS.split(',') 
+    : botConfig.targetJids;
+
+const OLD_TEXT_REGEX = process.env.OLD_TEXT_REGEX
+    ? process.env.OLD_TEXT_REGEX.split(',').map(pattern => {
+        try {
+            return pattern.trim() ? new RegExp(pattern.trim(), 'gu') : null;
+        } catch (e) {
+            console.error(`Invalid regex pattern: ${pattern}`, e);
+            return null;
+        }
+      }).filter(regex => regex !== null)
+    : botConfig.oldTextRegex.map(pattern => {
+        try {
+            return new RegExp(pattern, 'gu');
+        } catch (e) {
+            return null;
+        }
+      }).filter(regex => regex !== null);
+
+const NEW_TEXT = process.env.NEW_TEXT
+    ? process.env.NEW_TEXT
+    : botConfig.newText || '';
 
 // -----------------------------------------------------------------------------
 // SESSION STATE
@@ -29,32 +95,6 @@ wasi_app.use(express.static(path.join(__dirname, 'public')));
 
 // Keep-Alive Route
 wasi_app.get('/ping', (req, res) => res.status(200).send('pong'));
-
-// -----------------------------------------------------------------------------
-// AUTO FORWARD CONFIGURATION
-// -----------------------------------------------------------------------------
-const SOURCE_JIDS = process.env.SOURCE_JIDS
-    ? process.env.SOURCE_JIDS.split(',')
-    : [];
-
-const TARGET_JIDS = process.env.TARGET_JIDS
-    ? process.env.TARGET_JIDS.split(',')
-    : [];
-
-const OLD_TEXT_REGEX = process.env.OLD_TEXT_REGEX
-    ? process.env.OLD_TEXT_REGEX.split(',').map(pattern => {
-        try {
-            return pattern.trim() ? new RegExp(pattern.trim(), 'gu') : null;
-        } catch (e) {
-            console.error(`Invalid regex pattern: ${pattern}`, e);
-            return null;
-        }
-      }).filter(regex => regex !== null)
-    : [];
-
-const NEW_TEXT = process.env.NEW_TEXT
-    ? process.env.NEW_TEXT
-    : '';
 
 // -----------------------------------------------------------------------------
 // HELPER FUNCTIONS FOR MESSAGE CLEANING
@@ -99,18 +139,6 @@ function cleanForwardedLabel(message) {
             }
         }
         
-        if (cleanedMessage.protocolMessage) {
-            if (cleanedMessage.protocolMessage.type === 14 || 
-                cleanedMessage.protocolMessage.type === 26) {
-                if (cleanedMessage.protocolMessage.historySyncNotification) {
-                    const syncData = cleanedMessage.protocolMessage.historySyncNotification;
-                    if (syncData.pushName) {
-                        console.log('Newsletter from:', syncData.pushName);
-                    }
-                }
-            }
-        }
-        
         return cleanedMessage;
     } catch (error) {
         console.error('Error cleaning forwarded label:', error);
@@ -142,9 +170,7 @@ function cleanNewsletterText(text) {
         cleanedText = cleanedText.replace(marker, '');
     });
     
-    cleanedText = cleanedText.trim();
-    
-    return cleanedText;
+    return cleanedText.trim();
 }
 
 function replaceCaption(caption) {
@@ -210,7 +236,7 @@ function processAndCleanMessage(originalMessage) {
 }
 
 // -----------------------------------------------------------------------------
-// COMMAND HANDLER FUNCTION - UPDATED
+// COMMAND HANDLER
 // -----------------------------------------------------------------------------
 async function processCommand(sock, msg) {
     const from = msg.key.remoteJid;
@@ -245,7 +271,6 @@ async function startSession(sessionId) {
             console.log(`Session ${sessionId} is already connected.`);
             return;
         }
-
         if (existing.sock) {
             existing.sock.ev.removeAllListeners('connection.update');
             existing.sock.end(undefined);
@@ -282,12 +307,8 @@ async function startSession(sessionId) {
 
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut && statusCode !== 440;
 
-            console.log(`Session ${sessionId}: Connection closed, reconnecting: ${shouldReconnect}`);
-
             if (shouldReconnect) {
-                setTimeout(() => {
-                    startSession(sessionId);
-                }, 3000);
+                setTimeout(() => startSession(sessionId), 3000);
             } else {
                 console.log(`Session ${sessionId} logged out. Removing.`);
                 sessions.delete(sessionId);
@@ -320,7 +341,6 @@ async function startSession(sessionId) {
         if (SOURCE_JIDS.includes(wasi_origin) && !wasi_msg.key.fromMe) {
             try {
                 let relayMsg = processAndCleanMessage(wasi_msg.message);
-                
                 if (!relayMsg) return;
 
                 if (relayMsg.viewOnceMessageV2)
@@ -352,7 +372,7 @@ async function startSession(sessionId) {
                     relayMsg.documentMessage.caption = replaceCaption(relayMsg.documentMessage.caption);
                 }
 
-                console.log(`📦 Forwarding (cleaned) from ${wasi_origin}`);
+                console.log(`📦 Forwarding from ${wasi_origin}`);
 
                 for (const targetJid of TARGET_JIDS) {
                     try {
@@ -361,12 +381,11 @@ async function startSession(sessionId) {
                             relayMsg,
                             { messageId: wasi_sock.generateMessageTag() }
                         );
-                        console.log(`✅ Clean message forwarded to ${targetJid}`);
+                        console.log(`✅ Forwarded to ${targetJid}`);
                     } catch (err) {
                         console.error(`Failed to forward to ${targetJid}:`, err.message);
                     }
                 }
-
             } catch (err) {
                 console.error('Auto Forward Error:', err.message);
             }
@@ -397,8 +416,38 @@ wasi_app.get('/api/status', async (req, res) => {
         sessionId,
         connected,
         qr: qrDataUrl,
-        activeSessions: Array.from(sessions.keys())
+        activeSessions: Array.from(sessions.keys()),
+        dbConnected: wasi_isDbConnected ? wasi_isDbConnected() : false
     });
+});
+
+wasi_app.get('/api/config', (req, res) => {
+    res.json({
+        sourceJids: botConfig.sourceJids,
+        targetJids: botConfig.targetJids,
+        oldTextRegex: botConfig.oldTextRegex,
+        newText: botConfig.newText
+    });
+});
+
+wasi_app.post('/api/config', express.json(), (req, res) => {
+    try {
+        const { sourceJids, targetJids, oldTextRegex, newText } = req.body;
+        
+        if (sourceJids !== undefined) botConfig.sourceJids = sourceJids;
+        if (targetJids !== undefined) botConfig.targetJids = targetJids;
+        if (oldTextRegex !== undefined) botConfig.oldTextRegex = oldTextRegex;
+        if (newText !== undefined) botConfig.newText = newText;
+        
+        const saved = saveConfig();
+        
+        res.json({
+            success: saved,
+            message: saved ? 'Configuration saved successfully' : 'Failed to save configuration'
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
 
 wasi_app.get('/', (req, res) => {
@@ -412,8 +461,7 @@ function wasi_startServer() {
     wasi_app.listen(wasi_port, () => {
         console.log(`🌐 Server running on port ${wasi_port}`);
         console.log(`📡 Auto Forward: ${SOURCE_JIDS.length} source(s) → ${TARGET_JIDS.length} target(s)`);
-        console.log(`✨ Message Cleaning: Forwarded labels removed, Newsletter markers cleaned`);
-        console.log(`🥳 Congratulation 🎉 Muzamil MD Is Started 😌`);
+        console.log(`🤖 Bot Commands: !ping, !jid, !gjid`);
     });
 }
 
@@ -423,14 +471,16 @@ function wasi_startServer() {
 async function main() {
     if (process.env.MONGODB_URL) {
         const dbResult = await wasi_connectDatabase(process.env.MONGODB_URL);
-        if (dbResult) {
-            console.log('✅ Database Url connected');
-        }
+        if (dbResult) console.log('✅ Database connected');
     }
 
-    const sessionId = process.env.SESSION_ID || '';
+    const sessionId = process.env.SESSION_ID;
+    if (!sessionId) {
+        console.error('❌ SESSION_ID is required!');
+        process.exit(1);
+    }
+    
     await startSession(sessionId);
-
     wasi_startServer();
 }
 
