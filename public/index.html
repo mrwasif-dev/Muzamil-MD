@@ -51,10 +51,16 @@
         .card {
             background: rgba(18, 34, 39, 0.85);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(37, 211, 102, 0.2);
             border-radius: 48px;
             padding: 50px 40px;
             box-shadow: 0 25px 50px -8px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            border-color: rgba(37, 211, 102, 0.4);
         }
         
         .header {
@@ -84,11 +90,17 @@
             color: white;
             box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.3);
             transform: rotate(-5deg);
+            transition: transform 0.3s ease;
+        }
+        
+        .logo-icon:hover {
+            transform: rotate(0deg) scale(1.05);
         }
         
         .logo-text h1 {
             font-size: 32px;
             font-weight: 800;
+            letter-spacing: -1px;
             background: linear-gradient(to right, #e9f1f2, #a8e6cf);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -98,6 +110,8 @@
         .logo-text span {
             font-size: 14px;
             color: #8aa3a6;
+            font-weight: 500;
+            letter-spacing: 2px;
             text-transform: uppercase;
         }
         
@@ -116,6 +130,12 @@
             align-items: center;
             gap: 12px;
             font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .status-badge:hover {
+            background: rgba(37, 211, 102, 0.15);
+            border-color: rgba(37, 211, 102, 0.5);
         }
         
         .status-dot {
@@ -151,6 +171,12 @@
             margin-bottom: 40px;
             text-align: center;
             border: 1px dashed rgba(37, 211, 102, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .qr-section:hover {
+            border-color: rgba(37, 211, 102, 0.6);
+            background: rgba(0, 0, 0, 0.3);
         }
         
         .qr-title {
@@ -178,6 +204,12 @@
             display: inline-block;
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
             margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
         }
         
         .qr-wrapper img {
@@ -219,6 +251,13 @@
             border-radius: 32px;
             padding: 30px;
             margin-bottom: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .config-section:hover {
+            background: rgba(0, 0, 0, 0.25);
+            border-color: rgba(37, 211, 102, 0.2);
         }
         
         .config-title {
@@ -240,6 +279,7 @@
             margin-bottom: 10px;
             color: #a8e6cf;
             font-weight: 500;
+            font-size: 15px;
         }
         
         .form-control {
@@ -249,59 +289,124 @@
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(37, 211, 102, 0.3);
             color: white;
-            font-family: monospace;
+            font-family: 'Inter', monospace;
             font-size: 14px;
+            transition: all 0.3s ease;
         }
         
         .form-control:focus {
             outline: none;
             border-color: #25d366;
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+        
+        .form-control::placeholder {
+            color: rgba(138, 163, 166, 0.6);
         }
         
         .btn {
             padding: 16px 32px;
             border-radius: 100px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 12px;
             text-decoration: none;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
+            letter-spacing: 0.5px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
         
         .btn-save {
             background: linear-gradient(145deg, #25d366, #128C7E);
             color: white;
             width: 100%;
-            justify-content: center;
             margin-top: 10px;
+            position: relative;
+            overflow: hidden;
         }
         
         .btn-save:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(37, 211, 102, 0.3);
+        }
+        
+        .btn-save:active {
+            transform: translateY(0);
+        }
+        
+        .btn-save i {
+            font-size: 18px;
+        }
+        
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 30px;
+        }
+        
+        .social-btn {
+            padding: 16px 20px;
+            border-radius: 100px;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            color: white;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .social-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        .social-btn i {
+            font-size: 20px;
         }
         
         .btn-channel {
             background: linear-gradient(145deg, #833ab4, #fd1d1d, #fcb045);
-            color: white;
+            background-size: 200% 200%;
+            animation: gradient 5s ease infinite;
         }
         
         .btn-github {
             background: #24292e;
-            color: white;
         }
         
-        .social-buttons {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 20px;
+        .btn-github:hover {
+            background: #1b1f23;
+        }
+        
+        .btn-owner {
+            background: linear-gradient(145deg, #075e54, #128C7E);
+            border: 1px solid rgba(37, 211, 102, 0.3);
+        }
+        
+        .btn-owner:hover {
+            background: linear-gradient(145deg, #054c44, #0e6b5e);
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         .footer {
@@ -317,12 +422,26 @@
             color: #25d366;
             text-decoration: none;
             font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        
+        .footer a:hover {
+            color: #a8e6cf;
+            text-decoration: underline;
+        }
+        
+        #configMessage {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 500;
         }
         
         @media (max-width: 768px) {
             .card { padding: 30px 20px; }
             .header { flex-direction: column; align-items: flex-start; }
             .status-badge { width: 100%; justify-content: center; }
+            .social-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -375,52 +494,71 @@
                 
                 <!-- SOURCE JIDs -->
                 <div class="form-group">
-                    <label><i class="fas fa-arrow-right"></i> SOURCE JIDs (Forward From)</label>
+                    <label><i class="fas fa-arrow-right" style="color: #25d366;"></i> SOURCE JIDs <span style="color: #8aa3a6; font-weight: normal;">(Forward From)</span></label>
                     <textarea id="sourceJids" class="form-control" rows="2" placeholder="1234567890@s.whatsapp.net, 0987654321@g.us"></textarea>
-                    <small style="color: #8aa3a6; margin-top: 5px; display: block;">Comma separated JIDs</small>
+                    <small style="color: #8aa3a6; margin-top: 5px; display: block;">
+                        <i class="fas fa-info-circle"></i> Comma separated JIDs
+                    </small>
                 </div>
                 
                 <!-- TARGET JIDs -->
                 <div class="form-group">
-                    <label><i class="fas fa-arrow-left"></i> TARGET JIDs (Forward To)</label>
+                    <label><i class="fas fa-arrow-left" style="color: #25d366;"></i> TARGET JIDs <span style="color: #8aa3a6; font-weight: normal;">(Forward To)</span></label>
                     <textarea id="targetJids" class="form-control" rows="2" placeholder="1111111111@g.us, 2222222222@g.us"></textarea>
                 </div>
                 
                 <!-- OLD TEXT REGEX -->
                 <div class="form-group">
-                    <label><i class="fas fa-search"></i> OLD TEXT REGEX (Text to Replace)</label>
+                    <label><i class="fas fa-search" style="color: #25d366;"></i> OLD TEXT REGEX <span style="color: #8aa3a6; font-weight: normal;">(Text to Replace)</span></label>
                     <input type="text" id="oldTextRegex" class="form-control" placeholder="oldtext, anotherpattern, https?://[^\s]+">
-                    <small style="color: #8aa3a6; margin-top: 5px; display: block;">Comma separated regex patterns</small>
+                    <small style="color: #8aa3a6; margin-top: 5px; display: block;">
+                        <i class="fas fa-info-circle"></i> Comma separated regex patterns
+                    </small>
                 </div>
                 
                 <!-- NEW TEXT -->
                 <div class="form-group">
-                    <label><i class="fas fa-pencil-alt"></i> NEW TEXT (Replacement Text)</label>
+                    <label><i class="fas fa-pencil-alt" style="color: #25d366;"></i> NEW TEXT <span style="color: #8aa3a6; font-weight: normal;">(Replacement Text)</span></label>
                     <input type="text" id="newText" class="form-control" placeholder="new text here">
                 </div>
                 
                 <button onclick="saveConfig()" class="btn btn-save">
                     <i class="fas fa-save"></i> Save Configuration
                 </button>
-                <div id="configMessage" style="margin-top: 15px; text-align: center;"></div>
+                <div id="configMessage"></div>
             </div>
             
-            <!-- Social Buttons -->
-            <div class="social-buttons">
-                <a href="https://whatsapp.com/channel/0029VaB0Hv9pQjQ9qKxMxQ1h" target="_blank" class="btn btn-channel">
+            <!-- Social Buttons Grid -->
+            <div class="social-grid">
+                <!-- WhatsApp Channel Button -->
+                <a href="https://whatsapp.com/channel/0029Vasn4ipCBtxCxfJqgV3S" target="_blank" class="social-btn btn-channel">
                     <i class="fab fa-whatsapp"></i>
-                    Join WhatsApp Channel
+                    Join Channel
                 </a>
-                <a href="https://github.com/mrwasif-dev/Muzamil-MD" target="_blank" class="btn btn-github">
+                
+                <!-- GitHub Repository Button -->
+                <a href="https://github.com/mrwasif-dev/Muzamil-MD" target="_blank" class="social-btn btn-github">
                     <i class="fab fa-github"></i>
-                    GitHub Repository
+                    GitHub Repo
+                </a>
+                
+                <!-- Owner WhatsApp Contact Button -->
+                <a href="https://wa.me/923039107958" target="_blank" class="social-btn btn-owner">
+                    <i class="fas fa-headset"></i>
+                    Contact Owner
                 </a>
             </div>
             
             <!-- Footer -->
             <div class="footer">
-                <p>Made with <i class="fas fa-heart" style="color: #ff4d4d;"></i> by <a href="https://github.com/mrwasif-dev" target="_blank">mrwasif-dev</a></p>
-                <p style="margin-top: 10px;">© 2026 Muzamil-MD • All rights reserved</p>
+                <p>
+                    <i class="fas fa-code-branch" style="color: #25d366;"></i>
+                    Made with <i class="fas fa-heart" style="color: #ff4d4d;"></i> by 
+                    <a href="https://github.com/mrwasif-dev" target="_blank">mrwasif-dev</a>
+                </p>
+                <p style="margin-top: 12px;">
+                    <i class="far fa-copyright"></i> 2026 Muzamil-MD • All rights reserved
+                </p>
             </div>
         </div>
     </div>
@@ -448,7 +586,7 @@
             const newText = document.getElementById('newText').value.trim();
             
             const msgDiv = document.getElementById('configMessage');
-            msgDiv.innerHTML = '<span style="color: #ffaa33;"><i class="fas fa-spinner fa-spin"></i> Saving...</span>';
+            msgDiv.innerHTML = '<span style="color: #ffaa33;"><i class="fas fa-spinner fa-spin"></i> Saving configuration...</span>';
             
             try {
                 const res = await fetch('/api/config', {
@@ -459,10 +597,10 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    msgDiv.innerHTML = '<span style="color: #25d366;"><i class="fas fa-check-circle"></i> Configuration saved successfully!</span>';
+                    msgDiv.innerHTML = '<span style="color: #25d366; background: rgba(37,211,102,0.1); padding: 12px 20px; border-radius: 100px; display: inline-block;"><i class="fas fa-check-circle"></i> Configuration saved successfully!</span>';
                     setTimeout(() => location.reload(), 2000);
                 } else {
-                    msgDiv.innerHTML = '<span style="color: #ff4d4d;"><i class="fas fa-exclamation-triangle"></i> Failed to save</span>';
+                    msgDiv.innerHTML = '<span style="color: #ff4d4d;"><i class="fas fa-exclamation-triangle"></i> Failed to save configuration</span>';
                 }
             } catch (e) {
                 msgDiv.innerHTML = '<span style="color: #ff4d4d;"><i class="fas fa-exclamation-triangle"></i> Error: ' + e.message + '</span>';
