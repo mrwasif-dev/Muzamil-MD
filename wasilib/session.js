@@ -10,6 +10,16 @@ if (!globalThis.crypto) {
     globalThis.crypto = crypto;
 }
 
+// 🔥 FIX: Silent logger - تمام logs بند
+const logger = {
+    level: 'silent',
+    info: () => {},
+    debug: () => {},
+    error: () => {},
+    warn: () => {},
+    trace: () => {}
+};
+
 async function wasi_connectSession(flag = false, sessionId) {
     try {
         const sessionDir = path.join(__dirname, '..', 'sessions', sessionId);
@@ -21,7 +31,6 @@ async function wasi_connectSession(flag = false, sessionId) {
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
         const { version } = await fetchLatestBaileysVersion();
 
-        // 🔥 FIX: Terminal QR COMPLETELY OFF
         const wasi_sock = makeWASocket({
             version,
             auth: state,
@@ -31,7 +40,8 @@ async function wasi_connectSession(flag = false, sessionId) {
             generateHighQualityLinkPreview: false,
             shouldIgnoreJid: jid => jid.includes('newsletter'),
             markOnlineOnConnect: false,
-            defaultQueryTimeoutMs: 60000
+            defaultQueryTimeoutMs: 60000,
+            logger: logger  // ✅ SILENT LOGGER - اب کوئی log نہیں آئے گا
         });
 
         return { wasi_sock, saveCreds };
