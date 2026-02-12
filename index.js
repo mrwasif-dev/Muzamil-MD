@@ -311,6 +311,7 @@ async function startSession(sessionId) {
             sessionState.qr = qr;
             sessionState.isConnected = false;
             console.log(`📱 QR generated for session: ${sessionId}`);
+console.log(`🔐 Scan QR from Web Dashboard or Terminal`);
         }
 
         if (connection === 'close') {
