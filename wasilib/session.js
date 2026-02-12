@@ -27,7 +27,7 @@ async function wasi_connectSession(flag = false, sessionId) {
 
         return { wasi_sock, saveCreds };
     } catch (error) {
-        console.error('Session connection error:', error);
+        console.error('❌ Session connection error:', error);
         throw error;
     }
 }
@@ -37,10 +37,10 @@ async function wasi_clearSession(sessionId) {
         const sessionDir = path.join(__dirname, '..', 'sessions', sessionId);
         if (fs.existsSync(sessionDir)) {
             fs.rmSync(sessionDir, { recursive: true, force: true });
-            console.log(`Session ${sessionId} cleared successfully`);
+            console.log(`✅ Session ${sessionId} cleared`);
         }
     } catch (error) {
-        console.error('Error clearing session:', error);
+        console.error('❌ Error clearing session:', error);
     }
 }
 
