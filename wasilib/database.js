@@ -7,7 +7,7 @@ const wasi_sessionSchema = new mongoose.Schema({
     lastActive: { type: Date, default: Date.now }
 });
 
-// Schema for Baileys auth data
+// Schema for Baileys auth data (for session restore)
 const baileysAuthSchema = new mongoose.Schema({
     sessionId: { type: String, required: true, unique: true },
     creds: { type: Object, required: true },
@@ -91,14 +91,25 @@ async function wasi_getAllSessions() {
 }
 
 // ---------------------------------------------------------------------------
-// BAILEYS AUTH STORAGE (For session restore)
+// BAILEYS AUTH STORAGE (Main function for session restore)
 // ---------------------------------------------------------------------------
 async function wasi_saveAuth(sessionId, creds, keys) {
     if (!isConnected || !AuthModel) return false;
     try {
+        // Ensure creds and keys are valid
+        if (!creds || !keys) {
+            console.log('⚠️ Invalid auth data, not saving');
+            return false;
+        }
+        
         await AuthModel.findOneAndUpdate(
             { sessionId },
-            { sessionId, creds, keys, updatedAt: new Date() },
+            { 
+                sessionId, 
+                creds: creds || {}, 
+                keys: keys || {}, 
+                updatedAt: new Date() 
+            },
             { upsert: true, new: true }
         );
         console.log(`✅ Auth data saved for session: ${sessionId}`);
@@ -116,8 +127,8 @@ async function wasi_loadAuth(sessionId) {
         if (auth) {
             console.log(`✅ Auth data loaded for session: ${sessionId}`);
             return {
-                creds: auth.creds,
-                keys: auth.keys
+                creds: auth.creds || null,
+                keys: auth.keys || {}
             };
         }
         console.log(`📱 No auth data found for session: ${sessionId}`);
@@ -141,7 +152,7 @@ async function wasi_deleteAuth(sessionId) {
 }
 
 // ---------------------------------------------------------------------------
-// EXPORTS
+// EXPORTS - All functions
 // ---------------------------------------------------------------------------
 module.exports = {
     // Connection
