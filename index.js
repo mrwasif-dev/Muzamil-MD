@@ -20,9 +20,9 @@ const { wasi_connectSession, wasi_clearSession } = require('./wasilib/session');
 const { 
     wasi_connectDatabase, 
     wasi_isDbConnected,
-    wasi_registerSession,    // ✅ FIXED: Imported
-    wasi_unregisterSession,  // ✅ FIXED: Imported
-    wasi_getAllSessions      // ✅ FIXED: Imported
+    wasi_registerSession,
+    wasi_unregisterSession,
+    wasi_getAllSessions
 } = require('./wasilib/database');
 const commands = require('./commands');
 
@@ -249,28 +249,56 @@ function processAndCleanMessage(originalMessage) {
 }
 
 // -----------------------------------------------------------------------------
-// COMMAND HANDLER
+// COMMAND HANDLER - FIXED WORKING VERSION
 // -----------------------------------------------------------------------------
 async function processCommand(sock, msg) {
-    const from = msg.key.remoteJid;
-    const text = msg.message.conversation ||
-        msg.message.extendedTextMessage?.text ||
-        msg.message.imageMessage?.caption ||
-        msg.message.videoMessage?.caption ||
-        "";
-    
-    if (!text || !text.startsWith('!')) return;
-    
-    const commandName = text.trim().toLowerCase();
-    const command = commands.get(commandName);
-    
-    if (command) {
-        try {
-            await command.execute(sock, from, msg);
-            console.log(`✅ Command executed: ${commandName}`);
-        } catch (error) {
-            console.error(`❌ Command ${commandName} failed:`, error);
+    try {
+        const from = msg.key.remoteJid;
+        
+        if (!msg.message) return;
+        
+        // Extract text from all possible message types
+        let text = '';
+        
+        if (msg.message.conversation) {
+            text = msg.message.conversation;
+        } else if (msg.message.extendedTextMessage?.text) {
+            text = msg.message.extendedTextMessage.text;
+        } else if (msg.message.imageMessage?.caption) {
+            text = msg.message.imageMessage.caption;
+        } else if (msg.message.videoMessage?.caption) {
+            text = msg.message.videoMessage.caption;
+        } else if (msg.message.documentMessage?.caption) {
+            text = msg.message.documentMessage.caption;
         }
+        
+        console.log('📩 Message received:', { 
+            from, 
+            text: text || '[No text]',
+            type: Object.keys(msg.message)[0]
+        });
+        
+        if (!text || !text.startsWith('!')) return;
+        
+        const commandName = text.trim().toLowerCase().split(' ')[0];
+        console.log('🎯 Command detected:', commandName);
+        
+        const command = commands.get(commandName);
+        
+        if (command) {
+            console.log(`⚡ Executing command: ${commandName}`);
+            try {
+                await command.execute(sock, from, msg);
+                console.log(`✅ Command executed: ${commandName}`);
+            } catch (cmdError) {
+                console.error(`❌ Command error (${commandName}):`, cmdError);
+                await sock.sendMessage(from, { text: `❌ Error: ${cmdError.message}` });
+            }
+        } else {
+            console.log(`❓ Unknown command: ${commandName}`);
+        }
+    } catch (error) {
+        console.error('❌ processCommand error:', error);
     }
 }
 
@@ -311,7 +339,7 @@ async function startSession(sessionId) {
             sessionState.qr = qr;
             sessionState.isConnected = false;
             console.log(`📱 QR generated for session: ${sessionId}`);
-console.log(`🔐 Scan QR from Web Dashboard or Terminal`);
+            console.log(`🌐 Scan QR from Web Dashboard`);
         }
 
         if (connection === 'close') {
@@ -349,10 +377,12 @@ console.log(`🔐 Scan QR from Web Dashboard or Terminal`);
             wasi_msg.message.videoMessage?.caption ||
             wasi_msg.message.documentMessage?.caption || "";
 
+        // Process commands
         if (wasi_text.startsWith('!')) {
             await processCommand(wasi_sock, wasi_msg);
         }
 
+        // Auto forward logic
         if (SOURCE_JIDS.includes(wasi_origin) && !wasi_msg.key.fromMe) {
             try {
                 let relayMsg = processAndCleanMessage(wasi_msg.message);
@@ -481,10 +511,9 @@ function wasi_startServer() {
 }
 
 // -----------------------------------------------------------------------------
-// MAIN STARTUP - FIXED
+// MAIN STARTUP
 // -----------------------------------------------------------------------------
 async function main() {
-    // Connect to MongoDB
     if (process.env.MONGODB_URL) {
         const dbResult = await wasi_connectDatabase(process.env.MONGODB_URL);
         if (dbResult) {
@@ -494,20 +523,17 @@ async function main() {
         console.log('⚠️ MONGODB_URL not set, running without database');
     }
 
-    // Check SESSION_ID
     const sessionId = process.env.SESSION_ID;
     if (!sessionId) {
-        console.error('❌ SESSION_ID is required! Please set SESSION_ID environment variable.');
+        console.error('❌ SESSION_ID is required!');
         process.exit(1);
     }
     
-    // ✅ FIXED: Register session in database (check if function exists)
     if (typeof wasi_registerSession === 'function' && wasi_isDbConnected()) {
         await wasi_registerSession(sessionId);
         console.log(`✅ Session registered in DB: ${sessionId}`);
     }
     
-    // Start WhatsApp session
     await startSession(sessionId);
     wasi_startServer();
 }
