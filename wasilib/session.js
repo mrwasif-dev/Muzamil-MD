@@ -18,14 +18,22 @@ async function useMongoDBAuthState(sessionId) {
     // Load existing auth from MongoDB
     const savedAuth = await wasi_loadAuth(sessionId);
     
+    // 🔥 FIX: Ensure auth object is never null
     const state = {
-        creds: savedAuth?.creds || null,
+        creds: savedAuth?.creds || {
+            me: null,
+            registered: false,
+            deviceId: null,
+            account: null
+        },
         keys: savedAuth?.keys || {}
     };
 
     const saveCreds = async () => {
-        await wasi_saveAuth(sessionId, state.creds, state.keys);
-        await wasi_registerSession(sessionId);
+        if (state.creds) {  // Only save if creds exists
+            await wasi_saveAuth(sessionId, state.creds, state.keys);
+            await wasi_registerSession(sessionId);
+        }
     };
 
     return { state, saveCreds };
@@ -38,7 +46,7 @@ async function wasi_connectSession(flag = false, sessionId) {
         const { state, saveCreds } = await useMongoDBAuthState(sessionId);
         const { version } = await fetchLatestBaileysVersion();
 
-        const hasSession = state.creds ? true : false;
+        const hasSession = state.creds?.me ? true : false;
         
         if (hasSession) {
             console.log('✅ Existing session found in MongoDB! No QR needed.');
@@ -46,9 +54,15 @@ async function wasi_connectSession(flag = false, sessionId) {
             console.log('📱 No existing session, new QR will be generated');
         }
 
+        // 🔥 FIX: Ensure auth object is properly structured
+        const auth = {
+            creds: state.creds,
+            keys: state.keys
+        };
+
         const wasi_sock = makeWASocket({
             version,
-            auth: state,
+            auth: auth,  // Pass the auth object
             printQRInTerminal: false,
             browser: Browsers.macOS('Desktop'),
             syncFullHistory: false,
@@ -56,7 +70,10 @@ async function wasi_connectSession(flag = false, sessionId) {
             shouldIgnoreJid: jid => jid.includes('newsletter'),
             markOnlineOnConnect: false,
             defaultQueryTimeoutMs: 60000,
-            logger
+            logger,
+            // 🔥 FIX: Add retry logic
+            retryRequestDelayMs: 500,
+            maxRetries: 3
         });
 
         wasi_sock.ev.on('creds.update', saveCreds);
@@ -73,10 +90,14 @@ async function wasi_connectSession(flag = false, sessionId) {
             }
             
             if (connection === 'close') {
-                const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== 401;
+                const statusCode = lastDisconnect?.error?.output?.statusCode;
+                const shouldReconnect = statusCode !== 401 && statusCode !== 403;
+                
                 if (shouldReconnect) {
                     console.log('🔄 Reconnecting...');
-                    setTimeout(() => wasi_connectSession(false, sessionId), 3000);
+                    setTimeout(() => wasi_connectSession(false, sessionId), 5000);
+                } else {
+                    console.log('❌ Session logged out, QR needed');
                 }
             }
         });
