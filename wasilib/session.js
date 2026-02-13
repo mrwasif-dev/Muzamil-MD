@@ -15,22 +15,15 @@ const logger = pino({ level: 'silent' });
 
 // Custom auth state using MongoDB
 async function useMongoDBAuthState(sessionId) {
-    // Load existing auth from MongoDB
     const savedAuth = await wasi_loadAuth(sessionId);
     
-    // 🔥 FIX: Ensure auth object is never null
     const state = {
-        creds: savedAuth?.creds || {
-            me: null,
-            registered: false,
-            deviceId: null,
-            account: null
-        },
+        creds: savedAuth?.creds || null,
         keys: savedAuth?.keys || {}
     };
 
     const saveCreds = async () => {
-        if (state.creds) {  // Only save if creds exists
+        if (state.creds) {
             await wasi_saveAuth(sessionId, state.creds, state.keys);
             await wasi_registerSession(sessionId);
         }
@@ -51,18 +44,12 @@ async function wasi_connectSession(flag = false, sessionId) {
         if (hasSession) {
             console.log('✅ Existing session found in MongoDB! No QR needed.');
         } else {
-            console.log('📱 No existing session, new QR will be generated');
+            console.log('📱 No existing session, QR will be generated');
         }
-
-        // 🔥 FIX: Ensure auth object is properly structured
-        const auth = {
-            creds: state.creds,
-            keys: state.keys
-        };
 
         const wasi_sock = makeWASocket({
             version,
-            auth: auth,  // Pass the auth object
+            auth: state,
             printQRInTerminal: false,
             browser: Browsers.macOS('Desktop'),
             syncFullHistory: false,
@@ -70,34 +57,54 @@ async function wasi_connectSession(flag = false, sessionId) {
             shouldIgnoreJid: jid => jid.includes('newsletter'),
             markOnlineOnConnect: false,
             defaultQueryTimeoutMs: 60000,
-            logger,
-            // 🔥 FIX: Add retry logic
-            retryRequestDelayMs: 500,
-            maxRetries: 3
+            logger
         });
 
         wasi_sock.ev.on('creds.update', saveCreds);
         
+        // 🔥 FIX: Connection handler
         wasi_sock.ev.on('connection.update', (update) => {
             const { connection, qr, lastDisconnect } = update;
             
+            // 🔥 اگر QR ہے تو دکھاؤ
             if (qr) {
-                console.log('📱 QR generated - scan with WhatsApp');
+                console.log('📱 QR CODE GENERATED - SCAN WITH WHATSAPP');
+                console.log('🌐 Go to Web Dashboard to scan');
+                // QR store karo session mein
+                const session = sessions.get(sessionId);
+                if (session) {
+                    session.qr = qr;
+                }
+                return; // QR مل گیا، reconnect مت کرو
             }
             
+            // 🔥 کنیکٹ ہو گیا
             if (connection === 'open') {
                 console.log('✅ Connected to WhatsApp - session saved to MongoDB');
+                const session = sessions.get(sessionId);
+                if (session) {
+                    session.isConnected = true;
+                    session.qr = null;
+                }
+                return;
             }
             
+            // 🔥 کنیکشن بند ہوا
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                const shouldReconnect = statusCode !== 401 && statusCode !== 403;
+                console.log(`❌ Connection closed with code: ${statusCode}`);
                 
-                if (shouldReconnect) {
-                    console.log('🔄 Reconnecting...');
-                    setTimeout(() => wasi_connectSession(false, sessionId), 5000);
+                // صرف 401 (logged out) پر ہی reconnect کرو
+                if (statusCode === 401) {
+                    console.log('🚫 Session logged out, QR needed');
+                    const session = sessions.get(sessionId);
+                    if (session) {
+                        session.isConnected = false;
+                    }
                 } else {
-                    console.log('❌ Session logged out, QR needed');
+                    // باقی cases میں reconnect
+                    console.log('🔄 Reconnecting in 5 seconds...');
+                    setTimeout(() => wasi_connectSession(false, sessionId), 5000);
                 }
             }
         });
