@@ -1,6 +1,7 @@
 const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, Browsers } = require('@whiskeysockets/baileys');
 const path = require('path');
 const fs = require('fs');
+const pino = require('pino');
 
 // 🔥 FIX: Import crypto for Node.js 18+
 const crypto = require('crypto');
@@ -10,15 +11,8 @@ if (!globalThis.crypto) {
     globalThis.crypto = crypto;
 }
 
-// 🔥 FIX: Silent logger - تمام logs بند
-const logger = {
-    level: 'silent',
-    info: () => {},
-    debug: () => {},
-    error: () => {},
-    warn: () => {},
-    trace: () => {}
-};
+// 🔥 FIX: Proper pino logger - تمام logs بند
+const logger = pino({ level: 'silent' });
 
 async function wasi_connectSession(flag = false, sessionId) {
     try {
@@ -41,7 +35,7 @@ async function wasi_connectSession(flag = false, sessionId) {
             shouldIgnoreJid: jid => jid.includes('newsletter'),
             markOnlineOnConnect: false,
             defaultQueryTimeoutMs: 60000,
-            logger: logger  // ✅ SILENT LOGGER - اب کوئی log نہیں آئے گا
+            logger: logger  // ✅ PROPER PINO LOGGER
         });
 
         return { wasi_sock, saveCreds };
