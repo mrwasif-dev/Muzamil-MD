@@ -17,13 +17,19 @@ const logger = pino({ level: 'silent' });
 async function useMongoDBAuthState(sessionId) {
     const savedAuth = await wasi_loadAuth(sessionId);
     
+    // 🔥 FIX: Ensure creds is never null
     const state = {
-        creds: savedAuth?.creds || null,
+        creds: savedAuth?.creds || {
+            me: null,
+            registered: false,
+            deviceId: "placeholder",
+            account: null
+        },
         keys: savedAuth?.keys || {}
     };
 
     const saveCreds = async () => {
-        if (state.creds) {
+        if (state.creds && state.creds.me) {  // Only save if we have valid creds
             await wasi_saveAuth(sessionId, state.creds, state.keys);
             await wasi_registerSession(sessionId);
         }
@@ -62,49 +68,35 @@ async function wasi_connectSession(flag = false, sessionId) {
 
         wasi_sock.ev.on('creds.update', saveCreds);
         
-        // 🔥 FIX: Connection handler
+        // 🔥 FIX: Connection handler - sessions map is not available here
         wasi_sock.ev.on('connection.update', (update) => {
             const { connection, qr, lastDisconnect } = update;
             
-            // 🔥 اگر QR ہے تو دکھاؤ
+            // QR is available
             if (qr) {
                 console.log('📱 QR CODE GENERATED - SCAN WITH WHATSAPP');
                 console.log('🌐 Go to Web Dashboard to scan');
-                // QR store karo session mein
-                const session = sessions.get(sessionId);
-                if (session) {
-                    session.qr = qr;
-                }
-                return; // QR مل گیا، reconnect مت کرو
-            }
-            
-            // 🔥 کنیکٹ ہو گیا
-            if (connection === 'open') {
-                console.log('✅ Connected to WhatsApp - session saved to MongoDB');
-                const session = sessions.get(sessionId);
-                if (session) {
-                    session.isConnected = true;
-                    session.qr = null;
-                }
+                // Note: QR is stored in the session object in index.js
                 return;
             }
             
-            // 🔥 کنیکشن بند ہوا
+            // Connected successfully
+            if (connection === 'open') {
+                console.log('✅ Connected to WhatsApp - session saved to MongoDB');
+                return;
+            }
+            
+            // Connection closed
             if (connection === 'close') {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 console.log(`❌ Connection closed with code: ${statusCode}`);
                 
-                // صرف 401 (logged out) پر ہی reconnect کرو
-                if (statusCode === 401) {
-                    console.log('🚫 Session logged out, QR needed');
-                    const session = sessions.get(sessionId);
-                    if (session) {
-                        session.isConnected = false;
-                    }
-                } else {
-                    // باقی cases میں reconnect
+                // Only reconnect if not logged out
+                if (statusCode !== 401) {
                     console.log('🔄 Reconnecting in 5 seconds...');
                     setTimeout(() => wasi_connectSession(false, sessionId), 5000);
+                } else {
+                    console.log('🚫 Session logged out, QR needed');
                 }
             }
         });
