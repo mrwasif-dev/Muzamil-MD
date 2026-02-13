@@ -1,48 +1,52 @@
 module.exports = {
     name: '!gjid',
-    async execute(sock, from) {
+    async execute(sock, from, msg) {
         try {
+            console.log('👥 GJID command executing...');
+            
             const groups = await sock.groupFetchAllParticipating();
+            const groupList = Object.entries(groups);
             
-            let response = "Janu 😁  Your Group Groups List 😌:*\n\n";
-            let groupCount = 1;
+            if (groupList.length === 0) {
+                await sock.sendMessage(from, { text: '❌ You are not in any groups.' });
+                return;
+            }
             
-            for (const [jid, group] of Object.entries(groups)) {
-                const groupName = group.subject || "Unnamed Group";
-                const participantsCount = group.participants ? group.participants.length : 0;
+            let response = `📌 *Groups List (${groupList.length}):*\n\n`;
+            let count = 1;
+            
+            for (const [jid, group] of groupList) {
+                const name = group.subject || 'Unnamed Group';
+                const members = group.participants?.length || 0;
                 
-                let groupType = "Simple Group";
+                response += `${count}. *${name}*\n`;
+                response += `   👥 Members: ${members}\n`;
+                response += `   🆔: \`${jid}\`\n`;
+                
                 if (group.isCommunity) {
-                    groupType = "Community";
-                } else if (group.isCommunityAnnounce) {
-                    groupType = "Community Announcement";
-                } else if (group.parentGroup) {
-                    groupType = "Subgroup";
+                    response += `   📝 Type: Community\n`;
+                } else {
+                    response += `   📝 Type: Regular Group\n`;
                 }
                 
-                response += `${groupCount}. *${groupName}*\n`;
-                response += `   👥 Members: ${participantsCount}\n`;
-                response += `   🆔: \`${jid}\`\n`;
-                response += `   📝 Type: ${groupType}\n`;
                 response += `   ──────────────\n\n`;
+                count++;
                 
-                groupCount++;
+                if (response.length > 4000) {
+                    await sock.sendMessage(from, { text: response });
+                    response = '';
+                }
             }
             
-            if (groupCount === 1) {
-                response = "❌ No groups found. You are not in any groups.";
-            } else {
-                response += `\n*Total Groups: ${groupCount - 1}*`;
+            if (response) {
+                await sock.sendMessage(from, { text: response });
             }
             
-            await sock.sendMessage(from, { text: response });
-            console.log(`GJID command executed. Sent ${groupCount - 1} groups list.`);
+            console.log(`✅ GJID response sent for ${groupList.length} groups`);
             
         } catch (error) {
-            console.error('Error fetching groups:', error);
-            await sock.sendMessage(from, { 
-                text: "❌ Error fetching groups list. Please try again later." 
-            });
+            console.error('❌ GJID command error:', error);
+            await sock.sendMessage(from, { text: '❌ Error fetching groups.' });
         }
     }
 };
