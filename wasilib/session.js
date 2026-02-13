@@ -1,6 +1,10 @@
 const { default: makeWASocket, fetchLatestBaileysVersion, Browsers } = require('@whiskeysockets/baileys');
-const { MongoClient } = require('mongodb');
 const pino = require('pino');
+const {
+    wasi_loadAuth,
+    wasi_saveAuth,
+    wasi_registerSession
+} = require('./database');
 
 const crypto = require('crypto');
 if (!globalThis.crypto) {
@@ -8,46 +12,20 @@ if (!globalThis.crypto) {
 }
 
 const logger = pino({ level: 'silent' });
-let mongoClient = null;
-let credsCollection = null;
 
-async function getMongoDB() {
-    if (!mongoClient && process.env.MONGODB_URL) {
-        mongoClient = new MongoClient(process.env.MONGODB_URL);
-        await mongoClient.connect();
-        const db = mongoClient.db();
-        credsCollection = db.collection('whatsapp_sessions');
-        console.log('✅ MongoDB connected for session storage');
-    }
-    return credsCollection;
-}
-
+// Custom auth state using MongoDB
 async function useMongoDBAuthState(sessionId) {
-    const collection = await getMongoDB();
+    // Load existing auth from MongoDB
+    const savedAuth = await wasi_loadAuth(sessionId);
     
-    const writeData = async (data) => {
-        if (!collection) return;
-        await collection.updateOne(
-            { _id: sessionId },
-            { $set: { data: data, updatedAt: new Date() } },
-            { upsert: true }
-        );
-    };
-
-    const readData = async () => {
-        if (!collection) return null;
-        const doc = await collection.findOne({ _id: sessionId });
-        return doc ? doc.data : null;
-    };
-
     const state = {
-        creds: (await readData())?.creds || null,
-        keys: (await readData())?.keys || {}
+        creds: savedAuth?.creds || null,
+        keys: savedAuth?.keys || {}
     };
 
     const saveCreds = async () => {
-        await writeData({ creds: state.creds, keys: state.keys });
-        console.log('✅ Session saved to MongoDB');
+        await wasi_saveAuth(sessionId, state.creds, state.keys);
+        await wasi_registerSession(sessionId);
     };
 
     return { state, saveCreds };
@@ -63,7 +41,7 @@ async function wasi_connectSession(flag = false, sessionId) {
         const hasSession = state.creds ? true : false;
         
         if (hasSession) {
-            console.log('✅ Existing session found in MongoDB!');
+            console.log('✅ Existing session found in MongoDB! No QR needed.');
         } else {
             console.log('📱 No existing session, new QR will be generated');
         }
@@ -112,11 +90,9 @@ async function wasi_connectSession(flag = false, sessionId) {
 
 async function wasi_clearSession(sessionId) {
     try {
-        const collection = await getMongoDB();
-        if (collection) {
-            await collection.deleteOne({ _id: sessionId });
-            console.log(`✅ Session ${sessionId} cleared from MongoDB`);
-        }
+        const { wasi_deleteAuth } = require('./database');
+        await wasi_deleteAuth(sessionId);
+        console.log(`✅ Session ${sessionId} cleared from MongoDB`);
     } catch (error) {
         console.error('❌ Error clearing session:', error);
     }
