@@ -1,8 +1,5 @@
 const { default: makeWASocket, fetchLatestBaileysVersion, Browsers } = require('@whiskeysockets/baileys');
-const { useMongoDBAuthState } = require('@whiskeysockets/baileys-mongo');
 const { MongoClient } = require('mongodb');
-const path = require('path');
-const fs = require('fs');
 const pino = require('pino');
 
 const crypto = require('crypto');
@@ -12,77 +9,101 @@ if (!globalThis.crypto) {
 
 const logger = pino({ level: 'silent' });
 let mongoClient = null;
+let credsCollection = null;
 
-async function getMongoClient() {
+async function getMongoDB() {
     if (!mongoClient && process.env.MONGODB_URL) {
         mongoClient = new MongoClient(process.env.MONGODB_URL);
         await mongoClient.connect();
-        console.log('✅ MongoDB connected for auth');
+        const db = mongoClient.db();
+        credsCollection = db.collection('whatsapp_sessions');
+        console.log('✅ MongoDB connected for session storage');
     }
-    return mongoClient;
+    return credsCollection;
+}
+
+async function useMongoDBAuthState(sessionId) {
+    const collection = await getMongoDB();
+    
+    const writeData = async (data) => {
+        if (!collection) return;
+        await collection.updateOne(
+            { _id: sessionId },
+            { $set: { data: data, updatedAt: new Date() } },
+            { upsert: true }
+        );
+    };
+
+    const readData = async () => {
+        if (!collection) return null;
+        const doc = await collection.findOne({ _id: sessionId });
+        return doc ? doc.data : null;
+    };
+
+    const state = {
+        creds: (await readData())?.creds || null,
+        keys: (await readData())?.keys || {}
+    };
+
+    const saveCreds = async () => {
+        await writeData({ creds: state.creds, keys: state.keys });
+        console.log('✅ Session saved to MongoDB');
+    };
+
+    return { state, saveCreds };
 }
 
 async function wasi_connectSession(flag = false, sessionId) {
     try {
-        const client = await getMongoClient();
+        console.log(`🔍 Looking for session: ${sessionId} in MongoDB`);
         
-        if (client && process.env.MONGODB_URL) {
-            console.log(`🔍 Looking for session: ${sessionId} in MongoDB`);
-            
-            const db = client.db();
-            const collection = db.collection('baileys_auth');
-            
-            const existing = await collection.findOne({ _id: sessionId });
-            if (existing) {
-                console.log(`✅ Existing session found, restoring...`);
-            } else {
-                console.log(`📱 No existing session, new QR will be generated`);
-            }
-            
-            const { state, saveCreds } = await useMongoDBAuthState(collection, sessionId);
-            const { version } = await fetchLatestBaileysVersion();
+        const { state, saveCreds } = await useMongoDBAuthState(sessionId);
+        const { version } = await fetchLatestBaileysVersion();
 
-            const wasi_sock = makeWASocket({
-                version,
-                auth: state,
-                printQRInTerminal: false,
-                browser: Browsers.macOS('Desktop'),
-                syncFullHistory: false,
-                generateHighQualityLinkPreview: false,
-                shouldIgnoreJid: jid => jid.includes('newsletter'),
-                markOnlineOnConnect: false,
-                defaultQueryTimeoutMs: 60000,
-                logger
-            });
-
-            wasi_sock.ev.on('creds.update', saveCreds);
-            return { wasi_sock, saveCreds };
+        const hasSession = state.creds ? true : false;
+        
+        if (hasSession) {
+            console.log('✅ Existing session found in MongoDB!');
         } else {
-            // Fallback to file system
-            const sessionDir = path.join(__dirname, '..', 'sessions', sessionId);
-            if (!fs.existsSync(sessionDir)) {
-                fs.mkdirSync(sessionDir, { recursive: true });
-            }
-
-            const { state, saveCreds } = await require('@whiskeysockets/baileys').useMultiFileAuthState(sessionDir);
-            const { version } = await fetchLatestBaileysVersion();
-
-            const wasi_sock = makeWASocket({
-                version,
-                auth: state,
-                printQRInTerminal: false,
-                browser: Browsers.macOS('Desktop'),
-                syncFullHistory: false,
-                generateHighQualityLinkPreview: false,
-                shouldIgnoreJid: jid => jid.includes('newsletter'),
-                markOnlineOnConnect: false,
-                defaultQueryTimeoutMs: 60000,
-                logger
-            });
-
-            wasi_sock.ev.on('creds.update', saveCreds);
-            return { wasi_sock, saveCreds };
+            console.log('📱 No existing session, new QR will be generated');
         }
+
+        const wasi_sock = makeWASocket({
+            version,
+            auth: state,
+            printQRInTerminal: false,
+            browser: Browsers.macOS('Desktop'),
+            syncFullHistory: false,
+            generateHighQualityLinkPreview: false,
+            shouldIgnoreJid: jid => jid.includes('newsletter'),
+            markOnlineOnConnect: false,
+            defaultQueryTimeoutMs: 60000,
+            logger
+        });
+
+        wasi_sock.ev.on('creds.update', saveCreds);
+        
+        wasi_sock.ev.on('connection.update', (update) => {
+            const { connection, qr, lastDisconnect } = update;
+            
+            if (qr) {
+                console.log('📱 QR generated - scan with WhatsApp');
+            }
+            
+            if (connection === 'open') {
+                console.log('✅ Connected to WhatsApp - session saved to MongoDB');
+            }
+            
+            if (connection === 'close') {
+                const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== 401;
+                if (shouldReconnect) {
+                    console.log('🔄 Reconnecting...');
+                    setTimeout(() => wasi_connectSession(false, sessionId), 3000);
+                }
+            }
+        });
+
+        return { wasi_sock, saveCreds };
     } catch (error) {
         console.error('❌ Session connection error:', error);
         throw error;
@@ -91,10 +112,8 @@ async function wasi_connectSession(flag = false, sessionId) {
 
 async function wasi_clearSession(sessionId) {
     try {
-        const client = await getMongoClient();
-        if (client && process.env.MONGODB_URL) {
-            const db = client.db();
-            const collection = db.collection('baileys_auth');
+        const collection = await getMongoDB();
+        if (collection) {
             await collection.deleteOne({ _id: sessionId });
             console.log(`✅ Session ${sessionId} cleared from MongoDB`);
         }
