@@ -1,30 +1,19 @@
 {
   "name": "Muzamil-MD",
-  "description": "🤖 Advanced WhatsApp Auto Forward Bot with Multi-Device Support - Scan QR, Configure JIDs, Auto Forward Media & Emoji",
-  "keywords": [
-    "whatsapp",
-    "bot",
-    "auto-forward",
-    "baileys",
-    "multi-device",
-    "whatsapp-bot",
-    "muzamil",
-    "whatsapp-md"
-  ],
+  "description": "WhatsApp Auto Forward Bot with Multi-Device Support",
+  "keywords": ["whatsapp", "bot", "auto-forward", "baileys"],
   "repository": "https://github.com/mrwasif-dev/Muzamil-MD",
   "logo": "https://i.ibb.co/d6bLQ7y/whatsapp-logo.png",
   "success_url": "/",
   "stack": "heroku-22",
   "env": {
     "SESSION_ID": {
-      "description": "🔐 Unique session ID for your bot (required)",
-      "required": true,
-      "value": ""
+      "description": "Unique session ID for your bot",
+      "required": true
     },
     "MONGODB_URL": {
-      "description": "🍃 MongoDB connection URL for storing sessions (required for database features)",
-      "required": true,
-      "value": ""
+      "description": "MongoDB connection URL",
+      "required": false
     }
   },
   "buildpacks": [
