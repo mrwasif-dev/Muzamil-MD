@@ -2,13 +2,15 @@ module.exports = {
     name: '!ping',
     async execute(sock, from, msg) {
         try {
+            const start = Date.now();
             await sock.sendMessage(from, { 
-                text: '🏓 Pong!',
-                quoted: msg
+                text: '🏓 Pong!', 
+                quoted: msg 
             });
-            console.log(`✅ Ping response sent`);
+            const end = Date.now();
+            console.log(`✅ Ping: ${end - start}ms`);
         } catch (error) {
-            console.error('❌ Ping command error:', error);
+            console.error('❌ Ping error:', error);
         }
     }
 };
