@@ -10,7 +10,7 @@ const commandFiles = fs.readdirSync(__dirname).filter(file =>
 for (const file of commandFiles) {
     const command = require(`./${file}`);
     commands.set(command.name, command);
-    console.log(`✅ Command loaded: ${command.name}`);
+    console.log(`✅ Command: ${command.name}`);
 }
 
 module.exports = commands;
