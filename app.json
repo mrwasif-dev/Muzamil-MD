@@ -1,7 +1,7 @@
 {
   "name": "Muzamil-MD",
-  "description": "WhatsApp Auto Forward Bot with Multi-Device Support",
-  "keywords": ["whatsapp", "bot", "auto-forward", "baileys"],
+  "description": "WhatsApp Bot with Auto Forward & MongoDB Session",
+  "keywords": ["whatsapp", "bot", "muzamil", "mongodb"],
   "repository": "https://github.com/mrwasif-dev/Muzamil-MD",
   "logo": "https://i.ibb.co/d6bLQ7y/whatsapp-logo.png",
   "success_url": "/",
@@ -13,7 +13,7 @@
     },
     "MONGODB_URL": {
       "description": "MongoDB connection URL",
-      "required": false
+      "required": true
     }
   },
   "buildpacks": [
