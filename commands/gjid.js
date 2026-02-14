@@ -3,26 +3,22 @@ module.exports = {
     async execute(sock, from, msg) {
         try {
             const groups = await sock.groupFetchAllParticipating();
-            const groupList = Object.entries(groups);
+            const list = Object.entries(groups);
             
-            if (groupList.length === 0) {
-                await sock.sendMessage(from, { text: '❌ No groups found.' });
+            if (list.length === 0) {
+                await sock.sendMessage(from, { text: '❌ No groups' });
                 return;
             }
             
-            let response = `📌 *Groups List (${groupList.length}):*\n\n`;
-            let count = 1;
-            
-            for (const [jid, group] of groupList.slice(0, 10)) {
-                response += `${count}. *${group.subject || 'Unnamed'}*\n`;
-                response += `   🆔: \`${jid}\`\n\n`;
-                count++;
-            }
+            let response = `📌 Groups (${list.length}):\n\n`;
+            list.slice(0, 10).forEach(([jid, group], i) => {
+                response += `${i+1}. ${group.subject || 'Unnamed'}\n   🆔 ${jid}\n\n`;
+            });
             
             await sock.sendMessage(from, { text: response });
-            console.log(`✅ GJID response sent`);
+            console.log(`✅ GJID sent: ${list.length} groups`);
         } catch (error) {
-            console.error('❌ GJID command error:', error);
+            console.error('❌ GJID error:', error);
         }
     }
 };
