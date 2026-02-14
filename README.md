@@ -24,29 +24,6 @@
   </a>
 </p>
 
----
-
-## 📞 Owner Contact & Official Channel
-
-<p align="center">
-  <a href="https://wa.me/923039107958?text=Assalamu%20Alaikum%20Brother!%20I%20need%20Muzamil-MD%20Bot">
-    <img src="https://img.shields.io/badge/Contact%20Owner-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Contact Owner"/>
-  </a>
-  <a href="https://whatsapp.com/channel/0029Vasn4ipCBtxCxfJqgV3S">
-    <img src="https://img.shields.io/badge/Join%20Channel-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Join Channel"/>
-  </a>
-  <a href="https://t.me/paid_whatsapp_bot">
-    <img src="https://img.shields.io/badge/Telegram%20Channel-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram Channel"/>
-  </a>
-</p>
-
-<p align="center">
-  <b>📱 Owner WhatsApp:</b> <a href="https://wa.me/923039107958">+92 303 9107958</a> | 
-  <b>📢 Official Channel:</b> <a href="https://whatsapp.com/channel/0029Vasn4ipCBtxCxfJqgV3S">Click to Join</a>
-</p>
-
----
-
 ## ✨ Features
 
 | Feature | Description |
@@ -97,21 +74,23 @@
   </a>
 </p>
 
----
 
-## 🔧 Environment Variables
+## 📊 Platform Comparison
 
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| `SESSION_ID` | Unique session ID for your bot | ✅ Yes | `muzamil_bot_123` |
-| `SOURCE_JIDS` | JIDs to forward FROM (comma separated) | ✅ Yes | `1234567890@s.whatsapp.net,0987654321@g.us` |
-| `TARGET_JIDS` | JIDs to forward TO (comma separated) | ✅ Yes | `1111111111@g.us,2222222222@g.us` |
-| `MONGODB_URL` | MongoDB connection string | ⚠️ Recommended | `mongodb+srv://user:pass@cluster.mongodb.net` |
-| `OLD_TEXT_REGEX` | Regex patterns to replace (comma separated) | ❌ No | `oldtext,anotherpattern` |
-| `NEW_TEXT` | Replacement text | ❌ No | `new text here` |
-| `PORT` | Server port | ❌ No | `3000` |
-
----
+| Platform | Free Tier | Persistent Storage | One-Click Deploy |
+|----------|-----------|-------------------|------------------|
+| **Heroku** | 550 hrs/month | ❌ No | ✅ Yes |
+| **Koyeb** | Always free | ✅ Yes | ✅ Yes |
+| **Railway** | $5 credit | ✅ Yes | ✅ Yes |
+| **Render** | Always free | ✅ Yes | ✅ Yes |
+| **Replit** | Always free | ✅ Yes | ✅ Yes |
+| **Cyclic** | Always free | ✅ Yes | ✅ Yes |
+| **Vercel** | Always free | ❌ No | ✅ Yes |
+| **Netlify** | Always free | ❌ No | ✅ Yes |
+| **Google Cloud Run** | 2M requests/month | ✅ Yes | ✅ Yes |
+| **Northflank** | Always free | ✅ Yes | ✅ Yes |
+| **Fly.io** | Always free | ✅ Yes | ✅ Yes |
+| **Adaptable** | Always free | ✅ Yes | ✅ Yes |
 
 ## 📥 Local Installation
 
@@ -158,91 +137,49 @@ Command Description
 ✅ Newsletter Cleanup - Removes newsletter/broadcast markers
 ✅ Caption Replace - Replace text in media captions using regex
 
----
 
-📁 Project Structure
-
-```
-Muzamil-MD/
-├── index.js              # Main application file
-├── package.json          # Dependencies
-├── Procfile             # Heroku process file
-├── app.json             # Heroku deploy config
-├── .node-version        # Node.js version
-├── .env.example         # Example environment variables
-├── commands/            # Bot commands
-│   ├── index.js
-│   ├── ping.js
-│   ├── jid.js
-│   └── gjid.js
-├── wasilib/             # Core libraries
-│   ├── session.js       # WhatsApp session management
-│   └── database.js      # MongoDB connection
-└── public/              # Web dashboard
-    └── index.html       # QR scan & status UI
-```
-
----
-
-📊 Platform Comparison
-
-Platform Free Tier Persistent Storage One-Click Deploy
-Heroku 550 hrs/month ❌ No ✅ Yes
-Koyeb Always free ✅ Yes ✅ Yes
-Railway $5 credit ✅ Yes ✅ Yes
-Render Always free ✅ Yes ✅ Yes
-Replit Always free ✅ Yes ✅ Yes
-Cyclic Always free ✅ Yes ✅ Yes
-Vercel Always free ❌ No ✅ Yes
-Netlify Always free ❌ No ✅ Yes
-Google Cloud 2M requests/mo ✅ Yes ✅ Yes
-Northflank Always free ✅ Yes ✅ Yes
-
----
-
-📞 Contact & Support
+## 📞 Owner Contact & Official Channel
 
 <p align="center">
-  <a href="https://wa.me/923039107958?text=Assalamu%20Alaikum%20Brother!%20I%20need%20help%20with%20Muzamil-MD%20Bot">
-    <img src="https://img.shields.io/badge/WhatsApp%20Owner-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="WhatsApp Owner"/>
+  <a href="https://wa.me/923039107958?text=Assalamu%20Alaikum%20Brother!%20I%20need%20Muzamil-MD%20Bot">
+    <img src="https://img.shields.io/badge/Contact%20Owner-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Contact Owner"/>
   </a>
   <a href="https://whatsapp.com/channel/0029Vasn4ipCBtxCxfJqgV3S">
-    <img src="https://img.shields.io/badge/Official%20Channel-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Official Channel"/>
+    <img src="https://img.shields.io/badge/Join%20Channel-25D366?style=for-the-badge&logo=whatsapp&logoColor=white" alt="Join Channel"/>
   </a>
   <a href="https://t.me/paid_whatsapp_bot">
     <img src="https://img.shields.io/badge/Telegram%20Channel-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram Channel"/>
   </a>
 </p>
 
-· 📱 Owner WhatsApp: +92 303 9107958
-· 📢 Official Channel: Join WhatsApp Channel
-· 📬 Telegram: @paid_whatsapp_bot
-· 🐛 Report Issues: GitHub Issues
+<p align="center">
+  <b>📱 Owner WhatsApp:</b> <a href="https://wa.me/923039107958">+92 303 9107958</a> | 
+  <b>📢 Official Channel:</b> <a href="https://whatsapp.com/channel/0029Vasn4ipCBtxCxfJqgV3S">Click to Join</a>
+</p>
 
 ---
 
-⚠️ Important Notes
+
+
+# ⚠️ Important Notes
 
 · 🔒 Never share your SESSION_ID or MONGODB_URL
 · 📱 Scan QR from WhatsApp > Linked Devices
 · 🔄 Session persists - No need to scan again (with MongoDB)
 · 🆘 Report issues on GitHub for quick support
 
----
 
-📜 License
+# 📜 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
----
 
-🙏 Credits
+# 🙏 Credits
 
 · @whiskeysockets/baileys - WhatsApp Web API
 · Heroku - Cloud platform
 · MongoDB - Database
 
----
 
 <p align="center">
   <b>Made with ❤️ by <a href="https://github.com/mrwasif-dev">mrwasif-dev</a></b>
