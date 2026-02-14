@@ -2,14 +2,14 @@ module.exports = {
     name: '!jid',
     async execute(sock, from, msg) {
         try {
-            const remoteJid = msg.key.remoteJid;
+            const jid = msg.key.remoteJid;
             await sock.sendMessage(from, { 
-                text: `📱 *JID:* \`${remoteJid}\``,
-                quoted: msg
+                text: `📱 JID: \`${jid}\``,
+                quoted: msg 
             });
-            console.log(`✅ JID response sent`);
+            console.log(`✅ JID sent: ${jid}`);
         } catch (error) {
-            console.error('❌ JID command error:', error);
+            console.error('❌ JID error:', error);
         }
     }
 };
