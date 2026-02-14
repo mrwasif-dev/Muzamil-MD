@@ -69,11 +69,6 @@ After starting, open http://localhost:3000 in your browser to scan QR code.
   </a>
 </p>
 
-<p align="center">
-  <b>📱 Owner WhatsApp:</b> <a href="https://wa.me/923039107958">+92 303 9107958</a> | 
-  <b>📢 Official Channel:</b> <a href="https://whatsapp.com/channel/0029Vasn4ipCBtxCxfJqgV3S">Click to Join</a>
-</p>
-
 ## ✨ Features
 
 | Feature | Description |
