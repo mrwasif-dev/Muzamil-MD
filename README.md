@@ -24,20 +24,6 @@
   </a>
 </p>
 
-## ✨ Features
-
-| Feature | Description |
-|---------|-------------|
-| 📱 **Multi-Device Support** | Works with all WhatsApp Multi-Device features |
-| 🔄 **Auto Forward** | Automatically forward media & emoji messages |
-| 🧹 **Message Cleaning** | Removes forwarded labels & newsletter markers |
-| ✂️ **Caption Replace** | Replace text in captions using regex |
-| 🤖 **Bot Commands** | !ping, !jid, !gjid and more commands |
-| 🖥️ **Web Dashboard** | Beautiful UI for QR scan & status monitoring |
-| 💾 **Session Management** | Persistent sessions with MongoDB |
-| 🚀 **Multi-Platform Deploy** | One-click deploy to 10+ cloud platforms |
-
----
 
 ## 🚀 One-Click Deploy (Platforms)
 
@@ -68,27 +54,6 @@ npm start
 
 After starting, open http://localhost:3000 in your browser to scan QR code.
 
----
-
-🎯 Bot Commands
-
-Command Description
-!ping Check bot response time
-!jid Get current chat's JID
-!gjid List all groups with details
-!menu Show all available commands
-!status Check bot connection status
-
----
-
-🧹 Auto Forward Features
-
-✅ Media Only - Forwards images, videos, audio, documents, stickers
-✅ Emoji Only - Forwards messages containing only emojis
-✅ Clean Forwarding - Automatically removes "Forwarded" label
-✅ Newsletter Cleanup - Removes newsletter/broadcast markers
-✅ Caption Replace - Replace text in media captions using regex
-
 
 ## 📞 Owner Contact & Official Channel
 
@@ -109,7 +74,41 @@ Command Description
   <b>📢 Official Channel:</b> <a href="https://whatsapp.com/channel/0029Vasn4ipCBtxCxfJqgV3S">Click to Join</a>
 </p>
 
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| 📱 **Multi-Device Support** | Works with all WhatsApp Multi-Device features |
+| 🔄 **Auto Forward** | Automatically forward media & emoji messages |
+| 🧹 **Message Cleaning** | Removes forwarded labels & newsletter markers |
+| ✂️ **Caption Replace** | Replace text in captions using regex |
+| 🤖 **Bot Commands** | !ping, !jid, !gjid and more commands |
+| 🖥️ **Web Dashboard** | Beautiful UI for QR scan & status monitoring |
+| 💾 **Session Management** | Persistent sessions with MongoDB |
+| 🚀 **Multi-Platform Deploy** | One-click deploy to 10+ cloud platforms |
+
 ---
+
+
+🎯 Bot Commands
+
+Command Description
+!ping Check bot response time
+!jid Get current chat's JID
+!gjid List all groups with details
+!menu Show all available commands
+!status Check bot connection status
+
+---
+
+🧹 Auto Forward Features
+
+✅ Media Only - Forwards images, videos, audio, documents, stickers
+✅ Emoji Only - Forwards messages containing only emojis
+✅ Clean Forwarding - Automatically removes "Forwarded" label
+✅ Newsletter Cleanup - Removes newsletter/broadcast markers
+✅ Caption Replace - Replace text in media captions using regex
+
 
 
 
